@@ -9,15 +9,14 @@ module.exports.registerUser = async (req, res, next) => {
     if(!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
-    console.log(req.body);
 
-    const { fullName, fullname, email, password } = req.body;
-    const name = fullName || fullname;
+    const { fullName, email, password } = req.body;
+    const name = fullName;
 
     const hashedPassword = await userModel.hashPassword(password);
 
     const user = await userService.createUser({
-        firstname: name?.firstName || name?.firstname,
+        firstname: name?.firstName ,
         lastname: name?.lastName || name?.lastname,
         email: email,
         password: hashedPassword
@@ -27,4 +26,30 @@ module.exports.registerUser = async (req, res, next) => {
 
     res.status(201).json({ token, user });
 
+}
+
+module.exports.loginUser = async (req, res, next) => {
+
+    const errors = validationResult(req);
+    if(!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { email, password } = req.body;
+
+    const user = await userModel.findOne({ email }).select('+password');
+
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid email or password' });
+        }
+
+        // use the instance method defined on the user document
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid email or password' });
+        }
+
+        const token = user.generateAuthToken();
+        res.status(200).json({ token, user });
+    
 }

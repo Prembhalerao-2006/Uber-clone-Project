@@ -8,10 +8,10 @@
 Create a new user account. The endpoint validates the input and returns a JWT token and the created user (password is not returned).
 
 ## Request body
-The endpoint accepts either `fullName` or `fullname` as an object with `firstName` and optional `lastName` properties, plus `email` and `password`.
+The endpoint accepts `fullname` as an object with `firstName` and optional `lastName` properties, plus `email` and `password`.
 
 Required fields:
-- `fullName` or `fullname` (object)
+- `fullname` (object)
   - `firstName` (string) — required, minimum 2 characters
   - `lastName` (string) — optional, minimum 2 characters if provided
 - `email` (string) — required, must be a valid email
@@ -66,7 +66,7 @@ Example not found response (404):
 ```
 
 Notes:
-- The controller looks for `fullName` or `fullname` and will extract `firstName`/`lastname` to build the user record.
+- The controller looks for `fullname` and will extract `firstName`/`lastname` to build the user record.
 - Passwords are hashed before being stored (see `hashPassword`).
 
 ## Responses / Status codes
@@ -114,3 +114,50 @@ Example validation error (400):
 - Controller: [controllers/user.controllers.js](controllers/user.controllers.js)
 - Service: [services/user.service.js](services/user.service.js)
 - Model: [models/user.model.js](models/user.model.js)
+
+## Login Endpoint — /users/login
+
+- **Method:** POST
+- **Path:** `/users/login`
+
+## Description
+- Authenticate a user and return a JWT token plus the user object (password removed).
+
+## Request body
+- `email` (string) — required, must be a valid email
+- `password` (string) — required, minimum 6 characters
+
+Example request JSON:
+
+```json
+{
+  "email": "test02@email.com",
+  "password": "test_password"
+}
+```
+
+## Responses
+- `200 OK` — success. Returns `{ token, user }` where `user` does not include the `password` field.
+
+Example success response (200):
+
+```json
+{
+  "token": "<jwt-token>",
+  "user": {
+    "_id": "60c72b2f9b1e8a5f4c8e4b7a",
+    "fullName": { "firstName": "Jane", "lastName": "Doe" },
+    "email": "jane.doe@example.com",
+    "socketId": null
+  }
+}
+```
+
+- `400 Bad Request` — validation errors. Response contains `errors` array from `express-validator`.
+- `401 Unauthorized` — invalid credentials.
+- `500 Internal Server Error` — unexpected server error.
+
+## Notes
+- The route relies on `express-validator` for input validation; the controller reads validation results via `validationResult(req)`.
+- The controller must not return the hashed password in responses. If the service selects `+password` for verification, the controller should remove `password` before sending the user object.
+- The server must be running on the port you're calling (check for port conflicts like `EADDRINUSE`).
