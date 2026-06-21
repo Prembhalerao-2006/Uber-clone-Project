@@ -10,15 +10,16 @@ module.exports.authUser = async (req, res, next) => {
     if (!token) {
         return res.status(401).json({ message: 'Access denied. Unauthorized.' });
     }
-    // try {
-    //     const isBlacklisted = await blacklistTokenModel.findOne({ token });
-    //     if (isBlacklisted) {
-    //         return res.status(401).json({ message: 'Unauthorized.' });
-    //     }
-    // } catch (err) {
-    //     console.error('[auth] blacklist check failed:', err && err.message);
-    //     // continue - blacklist check failure shouldn't block valid tokens by default
-    // }
+    //
+    try {
+        const isBlacklisted = await blacklistTokenModel.findOne({ token });
+        if (isBlacklisted) {
+            return res.status(401).json({ message: 'Unauthorized.' });
+        }
+    } catch (err) {
+        console.error('[auth] blacklist check failed:', err && err.message);
+        // continue - blacklist check failure shouldn't block valid tokens by default
+    }
     try{
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const user = await userModel.findById(decoded._id);
