@@ -161,3 +161,45 @@ Example success response (200):
 - The route relies on `express-validator` for input validation; the controller reads validation results via `validationResult(req)`.
 - The controller must not return the hashed password in responses. If the service selects `+password` for verification, the controller should remove `password` before sending the user object.
 - The server must be running on the port you're calling (check for port conflicts like `EADDRINUSE`).
+
+## Profile Endpoint — /users/profile
+
+- **Method:** GET
+- **Path:** `/users/profile`
+- **Description:** Returns the currently authenticated user's profile. Requires a valid JWT token via cookie (`token`) or `Authorization: Bearer <token>` header.
+
+Success response (200):
+
+```json
+{
+  "user": { /* authenticated user object */ }
+}
+```
+
+Error responses:
+- `401 Unauthorized` — when token is missing, invalid, expired, or blacklisted.
+
+Notes:
+- The route uses `authMiddleware.authUser` which verifies the token, checks the token blacklist, and attaches the user document to `req.user`.
+- Ensure the client sends the cookie or Authorization header when calling this endpoint.
+
+## Logout Endpoint — /users/logout
+
+- **Method:** GET
+- **Path:** `/users/logout`
+- **Description:** Logs out the authenticated user by clearing the `token` cookie and adding the token to a blacklist collection.
+
+Success response (200):
+
+```json
+{
+  "message": "Logged out successfully"
+}
+```
+
+Error responses:
+- `401 Unauthorized` — when token is missing, invalid, expired, or already blacklisted.
+
+Notes:
+- The controller clears the `token` cookie and stores the token in `blacklistTokenModel` to prevent reuse.
+- The route is protected by `authMiddleware.authUser` to ensure only authenticated users can log out.
