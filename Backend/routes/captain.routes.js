@@ -2,6 +2,7 @@ const captainController = require('../controllers/captain.controller');
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
+const authMiddleware= require('../middlewares/auth.middleware');
 
 // Normalize incoming body keys so clients sending misspelled/lowercased keys still work
 function normalizeCaptainBody(req, res, next) {
@@ -55,5 +56,7 @@ router.post('/login', normalizeCaptainBody, [
 ], 
        captainController.loginCaptain
 );
+
+router.get('/profile', authMiddleware.authCaptain, captainController.getCaptainProfile);
 
 module.exports = router; 
