@@ -37,7 +37,7 @@ userSchema.methods.generateAuthToken = function() {
         throw new Error('JWT_SECRET environment variable is required');
     }
 
-    const token = jwt.sign({ _id: this._id }, secret, { expiresIn: '1h' });
+    const token = jwt.sign({ _id: this._id }, secret, { expiresIn: '24h' });
     return token;
 }
 

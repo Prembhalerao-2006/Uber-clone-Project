@@ -203,3 +203,50 @@ Error responses:
 Notes:
 - The controller clears the `token` cookie and stores the token in `blacklistTokenModel` to prevent reuse.
 - The route is protected by `authMiddleware.authUser` to ensure only authenticated users can log out.
+
+## Captains — /captains/register
+
+- **Method:** POST
+- **Path:** `/captains/register`
+
+Description:
+- Create a new captain (driver) account. Validates the request body, hashes the password, stores the captain document, and returns a JWT token plus the created captain object (password not included by default).
+
+Request body (JSON):
+- `fullName` (object) — preferred; `fullname` is also accepted (normalization middleware supports both)
+  - `firstName` (string) — required, minimum 2 characters
+  - `lastName` (string) — optional
+- `email` (string) — required, must be a valid email
+- `password` (string) — required, minimum 6 characters
+- `vehicles` (object) — accepted as `vehicles` or `vehical` (normalized)
+  - `color` (string) — required
+  - `plate` (string) — required, unique
+  - `capacity` (number) — required, integer >= 1
+  - `vehicleType` (string) — required, one of `car`, `motorcycle`, `auto-rickshaw`
+
+Example request (accepted by the API):
+
+```json
+{
+  "fullName": { "firstName": "John", "lastName": "Doe" },
+  "email": "john.captain@example.com",
+  "password": "strongPassword123",
+  "vehicles": { "color": "blue", "plate": "MH 20 PR 1240", "capacity": 3, "vehicleType": "car" }
+}
+```
+
+Notes on accepted variants:
+- The route normalizes `fullname` → `fullName` and `vehical` → `vehicles`, and `vehicalType` → `vehicleType`, so clients sending those misspellings or different casing will still work.
+- The model stores the name under `fullname` (lowercase) in the database; the API returns the stored document which includes the `fullname` object.
+
+Responses / Status codes:
+- `201 Created` — captain created successfully. Returns `{ token, captain }` where `captain` omits the password field.
+- `400 Bad Request` — validation errors (express-validator). Response contains an `errors` array with details.
+- `409 Conflict` — duplicate email or plate (unique constraint violation from the database).
+- `500 Internal Server Error` — unexpected server error.
+
+See also:
+- Route: [routes/captain.routes.js](routes/captain.routes.js)
+- Controller: [controllers/captain.controller.js](controllers/captain.controller.js)
+- Service: [services/captain.service.js](services/captain.service.js)
+- Model: [models/captain.model.js](models/captain.model.js)
