@@ -23,6 +23,17 @@ function normalizeCaptainBody(req, res, next) {
         // also accept lowercase 'lastname' inside fullName handled in controller
     }
 
+    // common alternate keys for login/register
+    if (!req.body.email) {
+        if (req.body.Email) req.body.email = req.body.Email;
+        else if (req.body.emailAddress) req.body.email = req.body.emailAddress;
+        else if (req.body.username) req.body.email = req.body.username;
+    }
+    if (!req.body.password) {
+        if (req.body.Password) req.body.password = req.body.Password;
+        else if (req.body.pass) req.body.password = req.body.pass;
+    }
+
     next();
 }
 
@@ -36,6 +47,13 @@ router.post('/register', normalizeCaptainBody, [
     body('vehicles.vehicleType').isIn(['car', 'motorcycle', 'auto-rickshaw']).withMessage('Vehicle type must be either car, motorcycle, or auto-rickshaw')
 ], 
        captainController.registerCaptain
+);
+
+router.post('/login', normalizeCaptainBody, [
+    body('email').isEmail().withMessage('Please provide a valid email address'),
+    body('password').notEmpty().withMessage('Password is required')
+], 
+       captainController.loginCaptain
 );
 
 module.exports = router; 
