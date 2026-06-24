@@ -59,4 +59,5 @@ router.post('/login', normalizeCaptainBody, [
 
 router.get('/profile', authMiddleware.authCaptain, captainController.getCaptainProfile);
 
+router.get('/logout', authMiddleware.authCaptain, captainController.logoutCaptain);
 module.exports = router; 
