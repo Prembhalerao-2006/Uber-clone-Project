@@ -1,4 +1,4 @@
-# Users API — /users/register
+## Users API — /users/register
 
 ## Endpoint
 - **Method:** POST
@@ -204,7 +204,7 @@ Notes:
 - The controller clears the `token` cookie and stores the token in `blacklistTokenModel` to prevent reuse.
 - The route is protected by `authMiddleware.authUser` to ensure only authenticated users can log out.
 
-## Captains — /captains/register
+## Register — /captains/register
 
 - **Method:** POST
 - **Path:** `/captains/register`
