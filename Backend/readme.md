@@ -250,3 +250,93 @@ See also:
 - Controller: [controllers/captain.controller.js](controllers/captain.controller.js)
 - Service: [services/captain.service.js](services/captain.service.js)
 - Model: [models/captain.model.js](models/captain.model.js)
+
+## Captain Login Endpoint — /captains/login
+
+- **Method:** POST
+- **Path:** `/captains/login`
+
+### Description
+- Authenticate a captain and return a JWT token plus the captain object (password must not be returned).
+
+### Request body
+- `email` (string) — required, must be a valid email
+- `password` (string) — required
+
+Example request JSON:
+
+```json
+{
+  "email": "captain@example.com",
+  "password": "strongPassword123"
+}
+```
+
+### Responses
+- `200 OK` — success. Returns `{ token, captain }` and sets a `token` cookie. The `captain` object should NOT include the hashed `password` field.
+
+Example success response (200):
+
+```json
+{
+  "token": "<jwt-token>",
+  "captain": {
+    "_id": "60c72b2f9b1e8a5f4c8e4b7a",
+    "fullName": { "firstName": "John", "lastName": "Doe" },
+    "email": "john.captain@example.com",
+    "vehicles": { "color": "blue", "plate": "MH 20 PR 1240", "capacity": 3, "vehicleType": "car" }
+  }
+}
+```
+
+- `400 Bad Request` — validation errors (express-validator).
+- `401 Unauthorized` — invalid credentials.
+- `500 Internal Server Error` — unexpected server error.
+
+Notes:
+- The route uses `express-validator` for validation. For credential checks the controller may select `+password` from the DB; ensure the `password` field is removed before sending the response.
+
+## Captain Profile Endpoint — /captains/profile
+
+- **Method:** GET
+- **Path:** `/captains/profile`
+
+### Description
+- Returns the currently authenticated captain's profile. Requires a valid JWT token provided via cookie (`token`) or `Authorization: Bearer <token>` header.
+
+Success response (200):
+
+```json
+{
+  "captain": { /* authenticated captain object without password */ }
+}
+```
+
+Error responses:
+- `401 Unauthorized` — when token is missing, invalid, expired, or blacklisted.
+
+Notes:
+- The route is protected by `authMiddleware.authCaptain`, which verifies the token, checks the blacklist, and attaches the captain document to `req.captain`.
+
+## Captain Logout Endpoint — /captains/logout
+
+- **Method:** GET
+- **Path:** `/captains/logout`
+
+### Description
+- Logs out the authenticated captain by clearing the `token` cookie and adding the token to the blacklist collection so it cannot be reused.
+
+Success response (200):
+
+```json
+{
+  "message": "Logged out successfully"
+}
+```
+
+Error responses:
+- `401 Unauthorized` — when token is missing, invalid, expired, or already blacklisted.
+
+Notes:
+- The controller clears the `token` cookie and stores the token in `blacklistTokenModel` to prevent reuse. The route is protected by `authMiddleware.authCaptain`.
+
